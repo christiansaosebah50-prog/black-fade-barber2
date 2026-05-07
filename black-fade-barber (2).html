@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Black Fade Barber Shop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Bebas+Neue&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #080808;
+    --dark: #111111;
+    --card: #161616;
+    --border: #2a2a2a;
+    --gold: #c9a84c;
+    --gold-light: #e8c96d;
+    --gold-dim: #8a6f30;
+    --white: #f5f0e8;
+    --muted: #888;
+    --red-accent: #8b1a1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Montserrat', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--gold);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease, background 0.2s;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transition: transform 0.35s ease, width 0.2s, height 0.2s;
+    opacity: 0.6;
+  }
+
+  /* GRAIN OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9000;
+    opacity: 0.4;
+  }
+
+  /* NAVIGATION */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 5%;
+    height: 70px;
+    transition: background 0.4s, backdrop-filter 0.4s;
+  }
+  nav.scrolled {
+    background: rgba(8,8,8,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    fill: none; stroke: var(--gold); stroke-width: 1.5;
+  }
+  .logo-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 0.12em;
+    color: var(--white);
+    line-height: 1;
+  }
+  .logo-text span { color: var(--gold); }
+
+  .nav-links {
+    display: flex; gap: 40px; list-style: none;
+  }
+  .nav-links a {
+    color: var(--white);
+    text-decoration: none;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 500;
+    opacity: 0.7;
+    transition: opacity 0.2s, color 0.2s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: '';
+    position: absolute; bottom: -4px; left: 0;
+    width: 0; height: 1px;
+    background: var(--gold);
+    transition: width 0.3s ease;
+  }
+  .nav-links a:hover { opacity: 1; color: var(--gold); }
+  .nav-links a:hover::after { width: 100%; }
+
+  .nav-cta {
+    background: var(--gold);
+    color: var(--black) !important;
+    padding: 8px 20px;
+    font-weight: 600 !important;
+    opacity: 1 !important;
+    letter-spacing: 0.15em;
+    transition: background 0.2s !important;
+  }
+  .nav-cta:hover { background: var(--gold-light) !important; }
+  .nav-cta::after { display: none !important; }
+
+  .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+  .hamburger span { width: 24px; height: 1px; background: var(--white); transition: 0.3s; }
+
+  /* HERO */
+  #hero {
+    height: 100vh; min-height: 600px;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: url('https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=1800&auto=format&fit=crop') center/cover no-repeat;
+    transform: scale(1.05);
+    transition: transform 8s ease;
+    filter: brightness(0.35) saturate(0.5);
+  }
+  .hero-bg.loaded { transform: scale(1); }
+
+  .hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(8,8,8,0.7) 0%, rgba(201,168,76,0.04) 50%, rgba(8,8,8,0.8) 100%);
+  }
+
+  .hero-lines {
+    position: absolute; inset: 0;
+    background-image:
+      repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(201,168,76,0.03) 80px);
+  }
+
+  .hero-content {
+    position: relative; z-index: 2;
+    text-align: center;
+    padding: 0 20px;
+    max-width: 900px;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    padding: 6px 20px;
+    margin-bottom: 28px;
+    animation: fadeUp 1s ease 0.3s both;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3.5rem, 9vw, 8rem);
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    animation: fadeUp 1s ease 0.5s both;
+  }
+  .hero-title .line-gold { color: var(--gold); font-style: italic; }
+
+  .hero-slogan {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+    font-style: italic;
+    font-weight: 300;
+    color: rgba(245,240,232,0.7);
+    letter-spacing: 0.05em;
+    margin-bottom: 48px;
+    animation: fadeUp 1s ease 0.7s both;
+  }
+
+  .hero-buttons {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    animation: fadeUp 1s ease 0.9s both;
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--black);
+    padding: 14px 36px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: rgba(255,255,255,0.1);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .btn-primary:hover::after { transform: translateX(0); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(201,168,76,0.3); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--white);
+    padding: 14px 36px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 1px solid rgba(245,240,232,0.3);
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+
+  .hero-scroll {
+    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    animation: fadeUp 1s ease 1.2s both;
+  }
+  .hero-scroll span { font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); }
+  .scroll-line { width: 1px; height: 50px; background: linear-gradient(to bottom, var(--gold), transparent); animation: scrollPulse 2s ease-in-out infinite; }
+
+  /* SECTIONS */
+  section { padding: 100px 5%; }
+
+  .section-header { text-align: center; margin-bottom: 70px; }
+  .section-tag {
+    font-size: 0.65rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 4vw, 3.5rem);
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .section-title em { font-style: italic; color: var(--gold); }
+  .section-line {
+    width: 60px; height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+    margin: 20px auto 0;
+  }
+
+  /* SERVICES */
+  #servicos { background: var(--dark); }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2px;
+    max-width: 1200px; margin: 0 auto;
+  }
+
+  .service-card {
+    background: var(--card);
+    padding: 44px 36px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    border: 1px solid var(--border);
+  }
+  .service-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(201,168,76,0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .service-card::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0;
+    width: 0; height: 2px;
+    background: var(--gold);
+    transition: width 0.4s ease;
+  }
+  .service-card:hover { transform: translateY(-4px); }
+  .service-card:hover::before { opacity: 1; }
+  .service-card:hover::after { width: 100%; }
+
+  .service-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.5rem;
+    color: rgba(201,168,76,0.1);
+    position: absolute; top: 16px; right: 20px;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .service-icon {
+    width: 48px; height: 48px;
+    margin-bottom: 20px;
+    stroke: var(--gold); fill: none; stroke-width: 1.5;
+  }
+
+  .service-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .service-desc {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  .service-price {
+    display: flex; align-items: baseline; gap: 4px;
+  }
+  .service-price .currency { font-size: 0.8rem; color: var(--gold); font-weight: 500; }
+  .service-price .amount {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  /* GALLERY */
+  #galeria { background: var(--black); }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(3, 200px);
+    gap: 4px;
+    max-width: 1200px; margin: 0 auto;
+  }
+
+  .gallery-item {
+    overflow: hidden;
+    position: relative;
+  }
+  .gallery-item:nth-child(1) { grid-column: 1/5; grid-row: 1/3; }
+  .gallery-item:nth-child(2) { grid-column: 5/9; grid-row: 1/2; }
+  .gallery-item:nth-child(3) { grid-column: 9/13; grid-row: 1/3; }
+  .gallery-item:nth-child(4) { grid-column: 5/7; grid-row: 2/3; }
+  .gallery-item:nth-child(5) { grid-column: 7/9; grid-row: 2/3; }
+  .gallery-item:nth-child(6) { grid-column: 1/5; grid-row: 3/4; }
+  .gallery-item:nth-child(7) { grid-column: 5/9; grid-row: 3/4; }
+  .gallery-item:nth-child(8) { grid-column: 9/13; grid-row: 3/4; }
+
+  .gallery-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    filter: saturate(0.7) brightness(0.8);
+    transition: filter 0.4s, transform 0.6s ease;
+  }
+  .gallery-item:hover img { filter: saturate(1) brightness(0.95); transform: scale(1.06); }
+
+  .gallery-item::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(8,8,8,0.5), transparent 60%);
+    pointer-events: none;
+  }
+
+  /* TEAM */
+  #equipe { background: var(--dark); }
+
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 32px;
+    max-width: 1100px; margin: 0 auto;
+  }
+
+  .team-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .team-photo {
+    width: 100%; aspect-ratio: 3/4;
+    object-fit: cover;
+    filter: grayscale(30%) brightness(0.85);
+    transition: filter 0.4s, transform 0.5s;
+    display: block;
+  }
+  .team-card:hover .team-photo { filter: grayscale(0) brightness(1); transform: scale(1.03); }
+
+  .team-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 30px 24px 24px;
+    background: linear-gradient(to top, rgba(8,8,8,0.95) 0%, transparent 100%);
+  }
+
+  .team-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+
+  .team-role {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-top: 4px;
+  }
+
+  .team-socials {
+    display: flex; gap: 12px; margin-top: 12px;
+  }
+  .team-socials a {
+    width: 28px; height: 28px;
+    border: 1px solid rgba(201,168,76,0.3);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gold);
+    font-size: 0.65rem;
+    text-decoration: none;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .team-socials a:hover { background: var(--gold); color: var(--black); border-color: var(--gold); }
+
+  /* TESTIMONIALS */
+  #depoimentos { background: var(--black); overflow: hidden; }
+
+  .testimonials-wrapper { position: relative; max-width: 900px; margin: 0 auto; }
+
+  .testimonials-track { overflow: hidden; }
+
+  .testimonials-inner {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .testimonial-slide {
+    min-width: 100%;
+    padding: 0 20px;
+    text-align: center;
+  }
+
+  .testimonial-stars {
+    color: var(--gold);
+    font-size: 1.2rem;
+    letter-spacing: 4px;
+    margin-bottom: 28px;
+  }
+
+  .testimonial-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.2rem, 2.5vw, 1.7rem);
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.6;
+    color: rgba(245,240,232,0.85);
+    margin-bottom: 32px;
+    max-width: 700px; margin-left: auto; margin-right: auto;
+  }
+
+  .testimonial-author {
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+  }
+  .testimonial-avatar {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    object-fit: cover;
+    filter: grayscale(30%);
+  }
+  .testimonial-name { font-size: 0.8rem; font-weight: 600; }
+  .testimonial-date { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+
+  .testimonial-controls {
+    display: flex; align-items: center; justify-content: center; gap: 24px;
+    margin-top: 50px;
+  }
+  .t-btn {
+    width: 44px; height: 44px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--white);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s, background 0.2s;
+    font-size: 1rem;
+  }
+  .t-btn:hover { border-color: var(--gold); background: rgba(201,168,76,0.1); }
+
+  .t-dots { display: flex; gap: 8px; }
+  .t-dot {
+    width: 6px; height: 6px;
+    background: var(--border);
+    transition: background 0.2s, width 0.3s;
+    cursor: pointer;
+  }
+  .t-dot.active { background: var(--gold); width: 20px; }
+
+  /* AGENDAMENTO */
+  #agendamento {
+    background: var(--dark);
+    position: relative;
+  }
+  #agendamento::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 40%; height: 100%;
+    background: linear-gradient(to right, rgba(201,168,76,0.03), transparent);
+    pointer-events: none;
+  }
+
+  .booking-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 80px;
+    max-width: 1100px; margin: 0 auto;
+    align-items: start;
+  }
+
+  .booking-info h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    margin-bottom: 20px;
+    line-height: 1.2;
+  }
+  .booking-info h3 em { font-style: italic; color: var(--gold); }
+  .booking-info p { font-size: 0.85rem; color: var(--muted); line-height: 1.8; margin-bottom: 32px; }
+
+  .booking-highlights { display: flex; flex-direction: column; gap: 20px; }
+  .booking-highlight {
+    display: flex; align-items: flex-start; gap: 16px;
+  }
+  .bh-icon {
+    width: 40px; height: 40px; flex-shrink: 0;
+    border: 1px solid var(--gold-dim);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gold); font-size: 1rem;
+  }
+  .bh-text strong { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
+  .bh-text span { font-size: 0.75rem; color: var(--muted); }
+
+  .booking-form {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 48px 40px;
+    position: relative;
+  }
+  .booking-form::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(to right, var(--gold), transparent);
+  }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .form-group:last-of-type { margin-bottom: 0; }
+
+  .form-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .form-input, .form-select {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--white);
+    padding: 14px 16px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+    appearance: none;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--gold); }
+  .form-select option { background: var(--card); }
+
+  .select-wrapper { position: relative; }
+  .select-wrapper::after {
+    content: '▾';
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--gold); pointer-events: none; font-size: 0.8rem;
+  }
+
+  .form-submit {
+    width: 100%;
+    margin-top: 24px;
+    padding: 16px;
+    font-size: 0.75rem;
+    letter-spacing: 0.25em;
+  }
+
+  .form-note { font-size: 0.7rem; color: var(--muted); text-align: center; margin-top: 12px; }
+
+  /* LOCATION */
+  #localizacao { background: var(--black); }
+
+  .location-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 60px;
+    max-width: 1100px; margin: 0 auto;
+    align-items: start;
+  }
+
+  .location-info { display: flex; flex-direction: column; gap: 32px; }
+
+  .info-block h4 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+  .info-block p { font-size: 0.85rem; color: var(--muted); line-height: 1.8; }
+
+  .hours-table { width: 100%; border-collapse: collapse; }
+  .hours-table tr { border-bottom: 1px solid var(--border); }
+  .hours-table td { padding: 8px 0; font-size: 0.8rem; }
+  .hours-table td:first-child { color: var(--muted); }
+  .hours-table td:last-child { color: var(--white); text-align: right; }
+  .hours-table .closed { color: var(--red-accent) !important; }
+
+  .map-container {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .map-container iframe {
+    width: 100%; height: 420px;
+    display: block;
+    filter: invert(90%) hue-rotate(180deg) saturate(0.3) brightness(0.8);
+  }
+
+  /* FOOTER */
+  footer {
+    background: #050505;
+    border-top: 1px solid var(--border);
+    padding: 70px 5% 30px;
+  }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 60px;
+    margin-bottom: 60px;
+    padding-bottom: 60px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .footer-brand .logo { margin-bottom: 20px; display: inline-flex; }
+  .footer-brand p { font-size: 0.8rem; color: var(--muted); line-height: 1.8; max-width: 280px; }
+
+  .footer-socials { display: flex; gap: 10px; margin-top: 24px; }
+  .social-btn {
+    width: 36px; height: 36px;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+  }
+  .social-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.08); }
+
+  .footer-col h5 {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-col ul a {
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-col ul a:hover { color: var(--white); }
+
+  .footer-bottom {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .footer-bottom p { font-size: 0.72rem; color: var(--muted); }
+  .footer-bottom span { color: var(--gold); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* MOBILE */
+  @media (max-width: 900px) {
+    .nav-links { display: none; flex-direction: column; position: fixed; top: 70px; left: 0; right: 0; background: rgba(8,8,8,0.98); padding: 30px; gap: 24px; }
+    .nav-links.open { display: flex; }
+    .hamburger { display: flex; }
+    .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+    .gallery-item { grid-column: auto !important; grid-row: auto !important; height: 200px; }
+    .booking-layout, .location-layout, .footer-top { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .footer-top { gap: 32px; }
+    body { cursor: auto; }
+    .cursor, .cursor-ring { display: none; }
+  }
+
+  /* WHATSAPP FLOAT */
+  .whatsapp-float {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    z-index: 8000;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+  }
+
+  .whatsapp-tooltip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--white);
+    font-size: 0.72rem;
+    font-family: 'Montserrat', sans-serif;
+    padding: 8px 14px;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateX(10px);
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+    position: relative;
+  }
+  .whatsapp-tooltip::after {
+    content: '';
+    position: absolute; right: -6px; top: 50%;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+    border-left-color: var(--border);
+  }
+
+  .whatsapp-btn {
+    width: 58px; height: 58px;
+    background: #25D366;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 4px 24px rgba(37,211,102,0.35);
+    transition: transform 0.25s, box-shadow 0.25s;
+    position: relative;
+  }
+  .whatsapp-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    transform: scale(0);
+    transition: transform 0.3s;
+  }
+  .whatsapp-btn:hover { transform: scale(1.1); box-shadow: 0 8px 32px rgba(37,211,102,0.5); }
+  .whatsapp-btn:hover::before { transform: scale(1); }
+  .whatsapp-btn svg { width: 30px; height: 30px; fill: white; }
+
+  .whatsapp-float:hover .whatsapp-tooltip { opacity: 1; transform: translateX(0); }
+
+  .whatsapp-pulse {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: #25D366;
+    animation: waPulse 2.5s ease-out infinite;
+    z-index: -1;
+  }
+  @keyframes waPulse {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 9000;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 48px;
+    max-width: 440px; width: 90%;
+    text-align: center;
+    position: relative;
+    animation: fadeUp 0.3s ease;
+  }
+  .modal::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(to right, var(--gold), transparent);
+  }
+  .modal-icon { font-size: 3rem; margin-bottom: 16px; }
+  .modal h3 { font-family: 'Playfair Display', serif; font-size: 1.6rem; margin-bottom: 12px; }
+  .modal p { color: var(--muted); font-size: 0.85rem; line-height: 1.7; margin-bottom: 28px; }
+  .modal-close {
+    background: var(--gold); color: var(--black);
+    border: none; padding: 12px 32px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#hero" class="logo">
+    <svg class="logo-icon" viewBox="0 0 40 40">
+      <path d="M8 32 L32 8 M20 20 L32 32" stroke-linecap="round"/>
+      <circle cx="10" cy="30" r="3"/>
+      <circle cx="12" cy="34" r="3"/>
+      <path d="M14 28 L28 14 L32 8" stroke-linecap="round"/>
+    </svg>
+    <div class="logo-text">BLACK <span>FADE</span></div>
+  </a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#servicos">Serviços</a></li>
+    <li><a href="#depoimentos">Clientes</a></li>
+    <li><a href="#localizacao">Localização</a></li>
+    <li><a href="#agendamento" class="nav-cta">Agendar</a></li>
+  </ul>
+  <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-lines"></div>
+  <div class="hero-content">
+    <div class="hero-badge">Est. 2018 · São Paulo</div>
+    <h1 class="hero-title">
+      BLACK<br>
+      <span class="line-gold">Fade</span><br>
+      BARBER
+    </h1>
+    <p class="hero-slogan">"Estilo que fala por você"</p>
+    <div class="hero-buttons">
+      <a href="#agendamento" class="btn-primary">Agendar Agora</a>
+      <a href="#servicos" class="btn-outline">Ver Serviços</a>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- SERVIÇOS -->
+<section id="servicos">
+  <div class="section-header reveal">
+    <span class="section-tag">O que fazemos</span>
+    <h2 class="section-title">Nossos <em>Serviços</em></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="services-grid">
+    <div class="service-card reveal">
+      <span class="service-number">01</span>
+      <svg class="service-icon" viewBox="0 0 48 48">
+        <path d="M12 8 L12 40 M18 8 L18 40 M12 8 Q18 4 18 8 M12 40 Q18 44 18 40"/>
+        <path d="M26 28 Q36 16 40 28 Q36 40 26 28Z"/>
+      </svg>
+      <div class="service-name">Corte + Sobrancelha</div>
+      <div class="service-desc">Corte impecável com tesoura e pente, mais design preciso de sobrancelha. Visual completo e alinhado.</div>
+      <div class="service-price"><span class="currency">R$</span><span class="amount">50</span></div>
+    </div>
+    <div class="service-card reveal" style="background: linear-gradient(135deg, #161616 0%, #1e1608 100%); border-color: var(--gold-dim);">
+      <span class="service-number" style="color: rgba(201,168,76,0.2);">02</span>
+      <svg class="service-icon" viewBox="0 0 48 48" style="stroke: var(--gold-light);">
+        <path d="M10 8 L10 28 M16 8 L16 28 M10 8 Q16 4 16 8"/>
+        <circle cx="30" cy="18" r="8"/>
+        <path d="M25 26 Q30 36 35 26"/>
+        <path d="M26 28 Q36 20 40 28 Q36 36 26 28Z"/>
+      </svg>
+      <div class="service-name" style="color: var(--gold-light);">Corte + Barba + Sobrancelha</div>
+      <div class="service-desc" style="color: rgba(232,201,109,0.5);">A experiência completa Black Fade. Corte, barba modelada com navalha e sobrancelha alinhada.</div>
+      <div class="service-price">
+        <span class="currency" style="color: var(--gold-light);">R$</span>
+        <span class="amount" style="color: var(--gold-light);">80</span>
+      </div>
+    </div>
+    <div class="service-card reveal">
+      <span class="service-number">03</span>
+      <svg class="service-icon" viewBox="0 0 48 48">
+        <circle cx="24" cy="20" r="10"/>
+        <path d="M18 30 Q24 44 30 30"/>
+        <path d="M14 18 L6 12 M34 18 L42 12"/>
+        <path d="M14 32 Q24 22 34 32 Q24 42 14 32Z"/>
+      </svg>
+      <div class="service-name">Barba + Sobrancelha</div>
+      <div class="service-desc">Barba modelada com acabamento de navalha e sobrancelha no capricho. Detalhes que fazem a diferença.</div>
+      <div class="service-price"><span class="currency">R$</span><span class="amount">50</span></div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- DEPOIMENTOS -->
+<section id="depoimentos">
+  <div class="section-header reveal">
+    <span class="section-tag">O que dizem de nós</span>
+    <h2 class="section-title">Clientes que <em>Confiam</em></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="testimonials-wrapper reveal">
+    <div class="testimonials-track">
+      <div class="testimonials-inner" id="testimonialsInner">
+        <div class="testimonial-slide">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"Melhor barbearia que já fui. O Marcus tem uma habilidade absurda com a tesoura. Saí com um corte impecável que durou muito mais tempo que o normal. Virei cliente fiel!"</p>
+          <div class="testimonial-author">
+            <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&auto=format&fit=crop&crop=face" alt="Cliente">
+            <div>
+              <div class="testimonial-name">Carlos Mendonça</div>
+              <div class="testimonial-date">Cliente há 2 anos</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-slide">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"O ambiente é incrível, parece que você entra em outro mundo. O café enquanto espera, a música, tudo muito bem pensado. O Diego é mestre no fade. Recomendo demais!"</p>
+          <div class="testimonial-author">
+            <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&crop=face" alt="Cliente">
+            <div>
+              <div class="testimonial-name">Lucas Ferreira</div>
+              <div class="testimonial-date">Cliente há 1 ano</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-slide">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"Fiz o combo completo pela primeira vez e foi transformador. Barba modelada, corte perfeito e ainda saí com o cabelo hidratado. Vale cada centavo. Ambiente impecável!"</p>
+          <div class="testimonial-author">
+            <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&crop=face" alt="Cliente">
+            <div>
+              <div class="testimonial-name">Thiago Almeida</div>
+              <div class="testimonial-date">Cliente há 6 meses</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-slide">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"Profissionais de outro nível. O Rafael entendeu exatamente o que eu queria na barba sem precisar explicar muito. Atenção aos detalhes que você não encontra em outro lugar."</p>
+          <div class="testimonial-author">
+            <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=100&auto=format&fit=crop&crop=face" alt="Cliente">
+            <div>
+              <div class="testimonial-name">Matheus Rodrigues</div>
+              <div class="testimonial-date">Cliente há 3 anos</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial-controls">
+      <button class="t-btn" onclick="prevTestimonial()">←</button>
+      <div class="t-dots" id="tDots"></div>
+      <button class="t-btn" onclick="nextTestimonial()">→</button>
+    </div>
+  </div>
+</section>
+
+<!-- AGENDAMENTO -->
+<section id="agendamento">
+  <div class="section-header reveal">
+    <span class="section-tag">Reserve seu horário</span>
+    <h2 class="section-title">Faça seu <em>Agendamento</em></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="booking-layout">
+    <div class="booking-info reveal">
+      <h3>Sua experiência começa <em>aqui</em></h3>
+      <p>Reserve com antecedência e garanta o melhor horário com o barbeiro de sua preferência. Oferecemos um atendimento personalizado que transforma cada visita em uma experiência única.</p>
+      <div class="booking-highlights">
+        <div class="booking-highlight">
+          <div class="bh-icon">✓</div>
+          <div class="bh-text">
+            <strong>Confirmação imediata</strong>
+            <span>Receba confirmação por WhatsApp em até 5 minutos</span>
+          </div>
+        </div>
+        <div class="booking-highlight">
+          <div class="bh-icon">◷</div>
+          <div class="bh-text">
+            <strong>Sem espera</strong>
+            <span>Seu horário garantido, sem filas</span>
+          </div>
+        </div>
+        <div class="booking-highlight">
+          <div class="bh-icon">★</div>
+          <div class="bh-text">
+            <strong>Escolha seu barbeiro</strong>
+            <span>Agende com o profissional que mais gosta</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="booking-form reveal">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome completo</label>
+          <input class="form-input" type="text" placeholder="Seu nome" id="fname">
+        </div>
+        <div class="form-group">
+          <label class="form-label">WhatsApp</label>
+          <input class="form-input" type="tel" placeholder="(11) 99999-9999" id="fphone">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Serviço desejado</label>
+        <div class="select-wrapper">
+          <select class="form-select" id="fservice">
+            <option value="">Selecione um serviço</option>
+            <option>Corte + Sobrancelha — R$ 50</option>
+            <option>Corte + Barba + Sobrancelha — R$ 80</option>
+            <option>Barba + Sobrancelha — R$ 50</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Barbeiro preferido</label>
+        <div class="select-wrapper">
+          <select class="form-select" id="fbarber">
+            <option value="">Sem preferência</option>
+            <option>Marcus Silva</option>
+            <option>Diego Santos</option>
+            <option>Rafael Costa</option>
+            <option>André Lima</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Data</label>
+          <input class="form-input" type="date" id="fdate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Horário</label>
+          <div class="select-wrapper">
+            <select class="form-select" id="ftime">
+              <option value="">Selecione</option>
+              <option>09:00</option><option>09:30</option>
+              <option>10:00</option><option>10:30</option>
+              <option>11:00</option><option>11:30</option>
+              <option>13:00</option><option>13:30</option>
+              <option>14:00</option><option>14:30</option>
+              <option>15:00</option><option>15:30</option>
+              <option>16:00</option><option>16:30</option>
+              <option>17:00</option><option>17:30</option>
+              <option>18:00</option><option>18:30</option>
+              <option>19:00</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary form-submit" onclick="submitBooking()">Confirmar Agendamento</button>
+      <p class="form-note">Ao confirmar, você será contatado pelo WhatsApp para validação.</p>
+    </div>
+  </div>
+</section>
+
+<!-- LOCALIZAÇÃO -->
+<section id="localizacao">
+  <div class="section-header reveal">
+    <span class="section-tag">Onde nos encontrar</span>
+    <h2 class="section-title">Nossa <em>Localização</em></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="location-layout">
+    <div class="location-info reveal">
+      <div class="info-block">
+        <h4>Endereço</h4>
+        <p>Rua Augusta, 1200 — Consolação<br>São Paulo — SP, 01304-001<br>Próximo ao Metrô Consolação</p>
+      </div>
+      <div class="info-block">
+        <h4>Horário de Funcionamento</h4>
+        <table class="hours-table">
+          <tr><td>Segunda</td><td>09h – 20h</td></tr>
+          <tr><td>Terça a Sexta</td><td>09h – 21h</td></tr>
+          <tr><td>Sábado</td><td>08h – 20h</td></tr>
+          <tr><td>Domingo</td><td>10h – 17h</td></tr>
+        </table>
+      </div>
+      <div class="info-block">
+        <h4>Contato</h4>
+        <p>📱 (11) 99876-5432<br>✉ contato@blackfade.com.br<br>📸 @blackfadebarber</p>
+      </div>
+    </div>
+    <div class="map-container reveal">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.0!2d-46.6546!3d-23.5565!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce59c8da0aa315%3A0xd59f9431f2c9776a!2sRua%20Augusta%2C%20S%C3%A3o%20Paulo%20-%20SP!5e0!3m2!1spt!2sbr!4v1000000000000"
+        allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <a href="#hero" class="logo">
+        <svg class="logo-icon" viewBox="0 0 40 40">
+          <path d="M8 32 L32 8 M20 20 L32 32" stroke-linecap="round"/>
+          <circle cx="10" cy="30" r="3"/>
+          <circle cx="12" cy="34" r="3"/>
+        </svg>
+        <div class="logo-text">BLACK <span>FADE</span></div>
+      </a>
+      <p>Mais do que um corte — uma experiência. Desde 2018 elevando o padrão da barbearia masculina em São Paulo.</p>
+      <div class="footer-socials">
+        <a href="#" class="social-btn" title="Instagram">ig</a>
+        <a href="#" class="social-btn" title="Facebook">fb</a>
+        <a href="#" class="social-btn" title="TikTok">tk</a>
+        <a href="#" class="social-btn" title="WhatsApp">wp</a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h5>Links Rápidos</h5>
+      <ul>
+        <li><a href="#servicos">Serviços</a></li>
+        <li><a href="#galeria">Galeria</a></li>
+        <li><a href="#equipe">Nossa Equipe</a></li>
+        <li><a href="#depoimentos">Depoimentos</a></li>
+        <li><a href="#agendamento">Agendar</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Serviços</h5>
+      <ul>
+        <li><a href="#">Corte Clássico</a></li>
+        <li><a href="#">Barba</a></li>
+        <li><a href="#">Degradê</a></li>
+        <li><a href="#">Hidratação</a></li>
+        <li><a href="#">Combo Completo</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Contato</h5>
+      <ul>
+        <li><a href="#">(11) 99876-5432</a></li>
+        <li><a href="#">contato@blackfade.com.br</a></li>
+        <li><a href="#">Rua Augusta, 1200</a></li>
+        <li><a href="#">Seg–Sex: 9h–21h</a></li>
+        <li><a href="#">Sáb: 8h–20h</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 <span>Black Fade Barber Shop</span>. Todos os direitos reservados.</p>
+    <p>Feito com <span>♥</span> em São Paulo</p>
+  </div>
+</footer>
+
+<!-- WHATSAPP FLOAT -->
+<div class="whatsapp-float">
+  <div class="whatsapp-tooltip">💬 Agendar pelo WhatsApp</div>
+  <a class="whatsapp-btn" id="waBtn" href="#" target="_blank" rel="noopener" title="Agendar pelo WhatsApp">
+    <div class="whatsapp-pulse"></div>
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+    </svg>
+  </a>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-icon">✂️</div>
+    <h3>Agendamento Enviado!</h3>
+    <p>Recebemos seu pedido com sucesso. Em breve nossa equipe entrará em contato via WhatsApp para confirmar seu horário. Até logo!</p>
+    <button class="modal-close" onclick="closeModal()">Perfeito!</button>
+  </div>
+</div>
+
+<script>
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.transform = `translate(${mx - 6}px, ${my - 6}px)`;
+  });
+
+  function animateRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.transform = `translate(${rx - 18}px, ${ry - 18}px)`;
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('a, button, .service-card, .team-card').forEach(el => {
+    el.addEventListener('mouseenter', () => { cursor.style.transform += ' scale(1.5)'; ring.style.width = '50px'; ring.style.height = '50px'; });
+    el.addEventListener('mouseleave', () => { ring.style.width = '36px'; ring.style.height = '36px'; });
+  });
+
+  // Navbar scroll
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+  });
+
+  // Hero image
+  window.addEventListener('load', () => {
+    setTimeout(() => document.getElementById('heroBg').classList.add('loaded'), 100);
+  });
+
+  // Hamburger
+  function toggleMenu() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.addEventListener('click', () => document.getElementById('navLinks').classList.remove('open'));
+  });
+
+  // Reveal on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Testimonials
+  let current = 0;
+  const slides = document.querySelectorAll('.testimonial-slide');
+  const inner = document.getElementById('testimonialsInner');
+  const dotsContainer = document.getElementById('tDots');
+
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 't-dot' + (i === 0 ? ' active' : '');
+    dot.onclick = () => goTo(i);
+    dotsContainer.appendChild(dot);
+  });
+
+  function goTo(n) {
+    current = (n + slides.length) % slides.length;
+    inner.style.transform = `translateX(-${current * 100}%)`;
+    document.querySelectorAll('.t-dot').forEach((d, i) => d.classList.toggle('active', i === current));
+  }
+
+  function nextTestimonial() { goTo(current + 1); }
+  function prevTestimonial() { goTo(current - 1); }
+
+  let autoSlide = setInterval(nextTestimonial, 5000);
+  document.querySelector('.testimonials-wrapper').addEventListener('mouseenter', () => clearInterval(autoSlide));
+  document.querySelector('.testimonials-wrapper').addEventListener('mouseleave', () => { autoSlide = setInterval(nextTestimonial, 5000); });
+
+  // Touch swipe
+  let startX = 0;
+  inner.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+  inner.addEventListener('touchend', e => {
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) diff > 0 ? nextTestimonial() : prevTestimonial();
+  });
+
+  // WhatsApp number (somente números, com DDI)
+  const WA_NUMBER = '5512981591366';
+
+  // Floating WA button — link direto
+  document.getElementById('waBtn').href =
+    `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Olá! Gostaria de agendar um horário na Black Fade Barber Shop. 🪒')}`;
+
+  // Booking
+  function submitBooking() {
+    const name = document.getElementById('fname').value.trim();
+    const phone = document.getElementById('fphone').value.trim();
+    const service = document.getElementById('fservice').value;
+    const barber = document.getElementById('fbarber').value;
+    const date = document.getElementById('fdate').value;
+    const time = document.getElementById('ftime').value;
+
+    if (!name || !phone || !service || !date || !time) {
+      alert('Por favor, preencha todos os campos.');
+      return;
+    }
+
+    // Formata a data
+    const [y, m, d] = date.split('-');
+    const dateFormatted = `${d}/${m}/${y}`;
+
+    // Monta a mensagem
+    const msg =
+`✂️ *Agendamento — Black Fade Barber Shop*
+
+👤 *Nome:* ${name}
+📱 *Contato:* ${phone}
+💈 *Serviço:* ${service}
+${barber ? `👨‍💼 *Barbeiro:* ${barber}\n` : ''}📅 *Data:* ${dateFormatted}
+⏰ *Horário:* ${time}
+
+Aguardo a confirmação! 🙏`;
+
+    // Abre o WhatsApp
+    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+
+    document.getElementById('modalOverlay').classList.add('open');
+
+    // Reset
+    ['fname','fphone','fdate'].forEach(id => document.getElementById(id).value = '');
+    ['fservice','fbarber','ftime'].forEach(id => document.getElementById(id).selectedIndex = 0);
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // Set min date for booking
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('fdate').min = today;
+
+  // Parallax hero
+  window.addEventListener('scroll', () => {
+    const scroll = window.scrollY;
+    const bg = document.getElementById('heroBg');
+    if (bg) bg.style.transform = `translateY(${scroll * 0.3}px) scale(1)`;
+  });
+</script>
+</body>
+</html>
